@@ -1,0 +1,33 @@
+{
+  "name": "dragonsaregreat",
+  "version": "1.0.0",
+  "description": "Dragon fan site",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon server/index.js",
+    "start": "node server/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usevalue/DragonsAreGreat.git"
+  },
+  "keywords": [
+    "fan",
+    "site",
+    "dragons",
+    "great",
+    "waffle"
+  ],
+  "author": "James Pollard",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/usevalue/DragonsAreGreat/issues"
+  },
+  "homepage": "https://github.com/usevalue/DragonsAreGreat#readme",
+  "dependencies": {
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.7"
+  }
+}
