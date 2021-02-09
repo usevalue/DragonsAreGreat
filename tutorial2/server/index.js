@@ -6,9 +6,9 @@ const session = require('express-session');
 
 // Navigation
 
-const clientPath = path.join(__dirname,'../client/')
+const clientPath = path.join(__dirname,'../client/');
 const staticPath = path.join(clientPath,'/static/');
-const viewsPath = path.join(clientPath,'/views/')
+const viewsPath = path.join(clientPath,'/views/');
 
 // Basic server
 
@@ -16,13 +16,13 @@ const app = express();
 app.use(express.static(staticPath));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(session({
-        name: 'dragons',
-        secret: 'eachcathad7kittens',
-        saveUninitialized: false,
-        resave: false,
-        cookie: {
-            maxAge: 1000*60*60*24*3,
-        }
+    name: 'dragons',
+    secret: 'eachcathad7kittens',
+    saveUninitialized: false,
+    resave: false,
+    cookie: {
+        maxAge: 1000*60*60*24*3,
+    }
 }));
 
 app.listen(2000);
