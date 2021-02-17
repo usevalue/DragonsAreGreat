@@ -44,6 +44,7 @@ app.get('/famous', function(req, res) {
 });
 
 app.post('/welcome', (req, res) => {
-    req.session.username=req.body.visitorname;
-    res.redirect('/');
+    console.log(req.body);
+    req.session.username=req.body.nombre;
+    res.send('SUCCESS');
 });
