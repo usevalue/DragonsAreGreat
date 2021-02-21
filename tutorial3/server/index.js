@@ -36,6 +36,7 @@ app.set('views',viewsPath);
 
 
 app.get('/', function(req, res) {
+    console.log(req.session)
     res.render('index', {data: req.session});
 });
 
@@ -44,7 +45,6 @@ app.get('/famous', function(req, res) {
 });
 
 app.post('/welcome', (req, res) => {
-    console.log(req.body);
     req.session.username=req.body.nombre;
     res.send('SUCCESS');
 });
