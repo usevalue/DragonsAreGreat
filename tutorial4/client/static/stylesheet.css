@@ -1,0 +1,18 @@
+#navbar {
+    background-color: aquamarine;
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    padding: 2px;
+}
+
+#mainpanel {
+    position: absolute;
+    top: 20px;
+    right: 20%;
+    left: 20%;
+}
+
+form {
+    margin: 0px
+}
