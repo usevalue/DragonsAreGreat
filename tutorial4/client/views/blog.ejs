@@ -6,8 +6,17 @@
 
 <body>
 
+<div id="mainpanel">
 <h1>So you have come to learn more about dragons...</h1>
 
+<table width="100%">
+<% postset.forEach(function(bpost) { %>
+<%- include('blogpostpreview',{post: bpost}) %>
+<% }) %>
+</table>
+<br/><br/>
+<a href="write/">Write a post</a>
+</div>
 <%- include('navbar.ejs') %>
 
 </body>
