@@ -1,7 +1,6 @@
 const express = require('express');
 const ejs = require ('ejs');
 const path = require('path');
-const bodyParser = require('body-parser');
 const session = require('express-session');
 const mongoose = require('mongoose');
 const {BlogPost} = require('./models.js')
@@ -16,7 +15,7 @@ const viewsPath = path.join(clientPath,'/views/');
 
 const app = express();
 app.use(express.static(staticPath));
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.urlencoded({extended: true}));
 app.use(session({
     name: 'dragons',
     secret: 'eachcathad7kittens',
@@ -28,6 +27,7 @@ app.use(session({
 }));
 
 mongoose.connect('mongodb://localhost:27017/dragons', {useNewUrlParser: true});
+
 
 app.listen(2000);
 
@@ -53,6 +53,34 @@ app.get('/famous', function(req, res) {
     res.render('famous', {data: req.session});
 });
 
+app.post('/welcome', (req, res) => {
+    req.session.username=req.body.nombre;
+    res.send('SUCCESS');
+});
+
+//  AUTHENTICATION ROUTES
+
+app.get('/register', (req, res) => {
+    res.render('register', {data: req.session})
+});
+
+app.get('/login', (req, res) => {
+    res.render('login', {data: req.session});
+});
+
+app.post('/register', (req, res)=>{
+    console.log(req.body);
+    res.redirect('/login');
+})
+
+app.post('/login', (req, res)=>{
+    console.log(req.body);
+    res.redirect('/blog/');
+})
+
+
+// BLOG ROUTES
+
 app.get('/blog/', async (req, res)=>{
     var posts = await BlogPost.find({}, (error, result) => {
         if(error) {
@@ -69,22 +97,6 @@ app.get('/blog/write/', (req, res)=>{
     res.render('writing', {data: req.session, draft: {}});
 });
 
-app.get('/blog/:id/', (req,res) => {
-    var searchID = req.params.id;
-    BlogPost.findById(searchID, (error, result)=>{
-        if(error) {
-            console.log(error);
-            res.redirect('/blog/');
-        }
-        else if(!result) {
-            res.status(404);
-        }
-        else {
-            res.render('entry',{data: req.session, entry: result});
-        }
-    })
-});
-
 app.post('/blog/writepost', async (req, res)=>{
     console.log(req.body);
     try {
@@ -97,10 +109,37 @@ app.post('/blog/writepost', async (req, res)=>{
     }
 });
 
-app.post('/welcome', (req, res) => {
-    req.session.username=req.body.nombre;
-    res.send('SUCCESS');
+app.get('/blog/:id/', (req,res) => {
+    var searchID = req.params.id;
+    BlogPost.findById(searchID, (error, result)=>{
+        if(error) {
+            console.log(error);
+            res.redirect('/blog/');
+        }
+        else if(!result) {
+            res.status(404);
+        }
+        else {
+            console.log(result)
+            let parsedText = result.body.replace(/\r\n|\r|\n/g,"<br />");
+            result.parsedText = parsedText;
+            res.render('entry',{data: req.session, entry: result});
+        }
+    })
 });
+
+// COMMENTING
+
+app.post('/blog/:id/comment', (req, res)=>{
+    console.log(req.body);
+    res.send('It works');
+});
+
+app.post('/blog/:id/deletecomment/:comment', (req, res)=>{
+    console.log(req.body);
+    res.send('Deleting comment');
+});
+
 
 app.get('/blog/:id/edit', (req,res)=>{
     BlogPost.findById(req.params.id, (error, result)=>{
