@@ -7,7 +7,7 @@
 <body>
 <div id="mainpanel">
 <h1><%=entry.title%></h1>
-
+<i>by <%=entry.author%></i><br/><br/>
 <%- entry.parsedText %>
 
 <br/><br/>
@@ -15,8 +15,18 @@
 <br/><br/>
 <hr style="border: 1px solid black" />
 
-<i style="font-size: 0.8em">comments</i>
-<!-- TO: show existing comments -->
+<i style="font-size: 0.8em">comments</i><br/><br/>
+
+<% entry.comments.forEach(function(comment) { %>
+<div><%= comment.text %></div>
+<i><%= comment.author %></i>
+    <% if(data.isDragonmaster) { %>
+    <form action="deletecomment/<%=comment._id%>" method="post"><button type="submit">Delete</button></form>
+    <%}%>
+    <br/><br/>
+<% }); %>
+
+
 <br/><br/>
 <a href="#" onclick="$('#commentform').show()"><i style="font-size: 0.8em">leave a comment</i></a><br/><br/>
 

@@ -3,7 +3,8 @@ const ejs = require ('ejs');
 const path = require('path');
 const session = require('express-session');
 const mongoose = require('mongoose');
-const {BlogPost} = require('./models.js')
+const {BlogPost, User} = require('./models.js')
+const bcrypt = require('bcrypt');
 
 // Navigation
 
@@ -61,25 +62,70 @@ app.post('/welcome', (req, res) => {
 //  AUTHENTICATION ROUTES
 
 app.get('/register', (req, res) => {
-    res.render('register', {data: req.session})
+    res.render('register', {data: req.session});
 });
 
 app.get('/login', (req, res) => {
     res.render('login', {data: req.session});
 });
 
-app.post('/register', (req, res)=>{
-    console.log(req.body);
-    res.redirect('/login');
+app.post('/register', async (req, res)=>{
+    try {
+        let rawpass = req.body.password;
+        var hashedpass = await bcrypt.hash(rawpass, 10);
+        var user = new User(req.body);
+        user.password = hashedpass;
+        await user.save();
+        res.redirect('/login');
+    }
+    catch(e) {
+        console.log(e);
+        res.send("Unable to register!");
+    }
 })
 
 app.post('/login', (req, res)=>{
-    console.log(req.body);
-    res.redirect('/blog/');
+    User.findOne({username: req.body.username}, async (error, result)=>{
+        if(error) {
+            console.log(error);
+            res.send("!");
+        }
+        else if(!result) res.send("User not found.");
+        else {
+            try {
+                console.log(req.body.password);
+                console.log(result.password);
+                let match = await bcrypt.compare(req.body.password, result.password);
+                if(match) {
+                    req.session.username = result.username;
+                    req.session.authenticated = true;
+                    req.session.isDragonmaster = result.isDragonmaster;
+                    res.redirect('/blog/');
+                }
+                else res.send('Incorrect password');
+            }
+            catch(e) {
+                console.log(e);
+                res.send('Error');
+            }
+
+        }
+    })
+    
 })
 
 
 // BLOG ROUTES
+
+const authenticated = function(req, res, next) {
+    if(req.session.authenticated) next();
+    else res.redirect('/login');
+}
+
+const dragonmaster = function(req, res, next) {
+    if(req.session.isDragonmaster) next();
+    else res.send('BEGONE, FOOLISH MORTAL.');
+}
 
 app.get('/blog/', async (req, res)=>{
     var posts = await BlogPost.find({}, (error, result) => {
@@ -93,14 +139,15 @@ app.get('/blog/', async (req, res)=>{
 
 });
 
-app.get('/blog/write/', (req, res)=>{
+app.get('/blog/write/', authenticated, dragonmaster, (req, res)=>{
     res.render('writing', {data: req.session, draft: {}});
 });
 
-app.post('/blog/writepost', async (req, res)=>{
+app.post('/blog/writepost', authenticated, dragonmaster, async (req, res)=>{
     console.log(req.body);
     try {
         let newPost = new BlogPost(req.body);
+        newPost.author = req.session.username;
         await newPost.save();
         res.redirect('/blog/');
     }
@@ -130,18 +177,42 @@ app.get('/blog/:id/', (req,res) => {
 
 // COMMENTING
 
-app.post('/blog/:id/comment', (req, res)=>{
-    console.log(req.body);
-    res.send('It works');
+app.post('/blog/:id/comment', authenticated, (req, res)=>{
+    BlogPost.findById(req.params.id, (error, result)=>{
+        if(error) {
+            console.log(error);
+            res.send('Error');
+        }
+        else if(!result) {
+            res.redirect('/blog/');
+        }
+        else {
+            result.comments.push({author: req.session.username, text: req.body.comment});
+            result.save();
+            res.redirect(path.join('/blog/', req.params.id+'/'));
+        }
+    });
 });
 
-app.post('/blog/:id/deletecomment/:comment', (req, res)=>{
-    console.log(req.body);
-    res.send('Deleting comment');
+app.post('/blog/:id/deletecomment/:comment', dragonmaster, async (req, res)=>{
+    BlogPost.findById(req.params.id, (error, result)=>{
+        if(error) {
+            console.log(error);
+            res.redirect('/');
+        }
+        else if(!result) {
+            res.send('Did you just delete comment on a non-existant post?');
+        }
+        else {
+            result.comments.id(req.params.comment).remove();
+            result.save();
+            res.redirect('/blog/'+req.params.id+'/');
+        }
+    });
 });
 
 
-app.get('/blog/:id/edit', (req,res)=>{
+app.get('/blog/:id/edit', dragonmaster, (req,res) => {
     BlogPost.findById(req.params.id, (error, result)=>{
         if(error) res.redirect('/blog/');
         else if(!result) res.redirect('/blog/');
@@ -149,7 +220,7 @@ app.get('/blog/:id/edit', (req,res)=>{
     });
 });
 
-app.post('/blog/:id/edit', (req, res)=>{
+app.post('/blog/:id/edit', dragonmaster, (req, res)=>{
     BlogPost.findById(req.params.id, (error, result)=>{
         if(error) {
             console.log(error);
@@ -165,7 +236,7 @@ app.post('/blog/:id/edit', (req, res)=>{
     });
 });
 
-app.get('/blog/:id/delete', (req, res)=>{
+app.get('/blog/:id/delete', dragonmaster, (req, res)=>{
     BlogPost.deleteOne({_id: req.params.id}, (error, result)=>{
         if(error) {
             console.log(error);
