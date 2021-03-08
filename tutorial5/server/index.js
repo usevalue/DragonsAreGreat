@@ -93,8 +93,6 @@ app.post('/login', (req, res)=>{
         else if(!result) res.send("User not found.");
         else {
             try {
-                console.log(req.body.password);
-                console.log(result.password);
                 let match = await bcrypt.compare(req.body.password, result.password);
                 if(match) {
                     req.session.username = result.username;
